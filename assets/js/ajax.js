@@ -1,0 +1,377 @@
+/**
+ * Clean Sweep - AJAX Functionality v2.0 Enhanced
+ * AJAX functions for plugin analysis, core reinstallation, and malware scanning
+ * Enhanced with shared hosting timeout prevention
+ */
+
+// Global constants for shared hosting optimization
+const SHARED_HOSTING_TRIES = 3;           // Retry failed requests 3 times
+const SHARED_HOSTING_TIMEOUT = 30000;     // 30 second timeout (shared hosting limits)
+const SHARED_HOSTING_HEARTBEAT = 2000;    // Check progress every 2 seconds
+const SHARED_HOSTING_RETRY_DELAY = 3000;  // Wait 3 seconds between retries
+
+// Detection for shared hosting environments
+const IS_SHARED_HOSTING = window.location.hostname.includes('godaddy') ||
+                         window.location.hostname.includes('hostgator') ||
+                         window.location.hostname.includes('bluehost') ||
+                         window.location.hostname.includes('siteground') ||
+                         window.location.hostname.includes('cpanel') ||
+                         window.location.hostname.includes('plesk');
+
+// Enhanced fetch with timeout detection and retry logic
+async function fetchWithTimeout(url, options = {}, retries = SHARED_HOSTING_TRIES) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort('timeout'), SHARED_HOSTING_TIMEOUT);
+
+    // Enhanced retry logic for shared hosting timeouts
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const response = await fetch(url, {
+                ...options,
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            // Check for shared hosting timeout pages
+            if (!response.ok) {
+                const text = await response.text();
+
+                // Detect shared hosting 504 timeout page
+                if (text.includes('HTTP 504') && text.includes('Gateway Timeout') ||
+                    text.includes('Connection Timeout') ||
+                    text.includes('Backend or gateway connection timeout')) {
+
+                    if (attempt < retries) {
+                        console.log(`Shared hosting timeout detected (attempt ${attempt}/${retries}). Retrying in ${SHARED_HOSTING_RETRY_DELAY/1000}s...`);
+                        await new Promise(resolve => setTimeout(resolve, SHARED_HOSTING_RETRY_DELAY));
+                        continue;
+                    }
+
+                    // Final attempt failed
+                    if (IS_SHARED_HOSTING) {
+                        throw new Error('Shared hosting has strict timeout limits (25-30 seconds). This operation may be too intensive for shared hosting. Consider using smaller batch sizes or upgrading to VPS hosting.');
+                    } else {
+                        throw new Error(`Server timeout after ${retries} attempts. The operation may be taking too long.`);
+                    }
+                }
+
+                // Handle other HTTP errors
+                if (text.includes('Server returned HTML instead of JSON')) {
+                    if (IS_SHARED_HOSTING) {
+                        throw new Error('Shared hosting timeout detected. Try reducing the operation scope or contact your hosting provider about PHP execution limits.');
+                    }
+                    throw new Error('Server error: Request timed out. The operation may be too resource-intensive.');
+                }
+
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            return response;
+
+        } catch (error) {
+            clearTimeout(timeoutId);
+
+            if (error.name === 'AbortError' && error.message === 'timeout') {
+                if (attempt < retries) {
+                    console.log(`Request timeout (attempt ${attempt}/${retries}). Retrying in ${SHARED_HOSTING_RETRY_DELAY/1000}s...`);
+                    await new Promise(resolve => setTimeout(resolve, SHARED_HOSTING_RETRY_DELAY));
+                    continue;
+                }
+
+                if (IS_SHARED_HOSTING) {
+                    throw new Error('Request timed out - shared hosting has strict 30-second limits. Try breaking the operation into smaller batches.');
+                }
+                throw new Error('Request timed out. The server may be overloaded or the operation is too resource-intensive.');
+            }
+
+            // Re-throw other errors after retries are exhausted
+            if (attempt === retries) {
+                throw error;
+            }
+        }
+    }
+}
+
+// Plugin analysis with AJAX progress tracking
+let pluginProgressInterval = null;
+let pluginProgressFile = null;
+
+function startPluginAnalysis() {
+    // Generate unique progress file name
+    pluginProgressFile = 'plugin_progress_' + Date.now() + '.progress';
+
+    // Show progress container and hide the button
+    document.getElementById("plugin-progress-container").style.display = "block";
+    document.querySelector("[onclick='startPluginAnalysis()']").style.display = "none";
+
+    // Start progress polling after a small delay to ensure file is created
+    setTimeout(() => {
+        pluginProgressInterval = setInterval(pollPluginProgress, 2000);
+    }, 500);
+
+    // Submit the request via AJAX
+    const formData = new FormData();
+    formData.append('action', 'analyze_plugins');
+    formData.append('progress_file', pluginProgressFile);
+
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        // Check if response is JSON
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+            return response.json();
+        } else {
+            // Not JSON, probably an error page
+            return response.text().then(text => {
+                // Show more of the error content to help debug
+                const preview = text.substring(0, 500).replace(/\s+/g, ' ').trim();
+                throw new Error('Server returned HTML instead of JSON. Error content: ' + preview + (text.length > 500 ? '...' : ''));
+            });
+        }
+    })
+    .then(data => {
+        // Process completed - stop polling
+        clearInterval(pluginProgressInterval);
+        pluginProgressInterval = null;
+
+        // Show results
+        if (data.success && data.html) {
+            // Switch to plugins tab
+            switchTab('plugins');
+
+            // Update the plugins tab content with the rendered HTML
+            const pluginsTab = document.getElementById('plugins-tab');
+            if (pluginsTab) {
+                pluginsTab.innerHTML = data.html;
+            }
+
+            // Hide the progress container
+            const progressContainer = document.getElementById("plugin-progress-container");
+            if (progressContainer) {
+                progressContainer.style.display = "none";
+            }
+        } else if (data.error) {
+            document.getElementById("plugin-progress-details").innerHTML = '<div style="color:#dc3545;">Error: ' + data.error + '</div>';
+            document.getElementById("plugin-status-indicator").textContent = "Error";
+            document.getElementById("plugin-status-indicator").className = "status-indicator status-completed";
+        } else {
+            document.getElementById("plugin-progress-details").innerHTML = '<div style="color:#dc3545;">Error: Failed to analyze plugins</div>';
+            document.getElementById("plugin-status-indicator").textContent = "Error";
+            document.getElementById("plugin-status-indicator").className = "status-indicator status-completed";
+        }
+    })
+    .catch(error => {
+        clearInterval(pluginProgressInterval);
+        pluginProgressInterval = null;
+        document.getElementById("plugin-progress-details").innerHTML = '<div style="color:#dc3545;">Error: ' + error.message + '</div>';
+        document.getElementById("plugin-status-indicator").textContent = "Error";
+        document.getElementById("plugin-status-indicator").className = "status-indicator status-completed";
+    });
+}
+
+function pollPluginProgress() {
+    if (!pluginProgressFile) return;
+
+    // Progress files are stored in logs directory for web-accessibility
+    fetch('logs/' + pluginProgressFile + '?t=' + Date.now())
+        .then(response => {
+            if (response.status === 404) {
+                // Progress file doesn't exist yet - silently continue polling
+                console.log('Waiting for progress file creation...');
+                return null;
+            }
+            if (response.ok) {
+                return response.text();
+            }
+            return null;
+        })
+        .then(text => {
+            if (text) {
+                try {
+                    const data = JSON.parse(text);
+                    updatePluginProgress(data);
+                } catch (e) {
+                    // JSON parsing failed, file might not be complete yet
+                }
+            }
+        })
+        .catch(error => {
+            // Only log real network errors, not expected 404s
+            if (!error.message.includes('404')) {
+                console.error('Progress polling network error:', error);
+            }
+        });
+}
+
+function updatePluginProgress(data) {
+    const statusIndicator = document.getElementById("plugin-status-indicator");
+    const progressFill = document.getElementById("plugin-progress-fill");
+    const progressText = document.getElementById("plugin-progress-text");
+    const progressDetails = document.getElementById("plugin-progress-details");
+
+    if (data.status) {
+        statusIndicator.textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+    }
+
+    if (data.progress !== undefined) {
+        progressFill.style.width = data.progress + "%";
+    }
+
+    if (data.message) {
+        progressText.textContent = data.message;
+    }
+
+    if (data.details) {
+        progressDetails.innerHTML = data.details;
+    }
+
+    // Update status indicator class
+    if (data.status === 'complete' || data.status === 'error') {
+        statusIndicator.className = "status-indicator status-completed";
+        // Stop polling when complete
+        clearInterval(pluginProgressInterval);
+        pluginProgressInterval = null;
+    }
+}
+
+// Core reinstallation with AJAX progress tracking
+let coreProgressInterval = null;
+let coreProgressFile = null;
+
+function startCoreReinstall() {
+    const version = document.getElementById("wp-version").value;
+    if (!confirm("Are you sure you want to re-install WordPress core files? This will replace all core files while preserving wp-config.php and /wp-content. Make sure you have a backup!")) {
+        return;
+    }
+
+    // Generate unique progress file name
+    coreProgressFile = 'core_progress_' + Date.now() + '.progress';
+
+    // Show progress container and hide the button
+    document.getElementById("core-progress-container").style.display = "block";
+    document.querySelector("[onclick='startCoreReinstall()']").style.display = "none";
+
+    // Start progress polling
+    coreProgressInterval = setInterval(pollCoreProgress, 2000);
+
+    // Submit the request via AJAX
+    const formData = new FormData();
+    formData.append('action', 'reinstall_core');
+    formData.append('wp_version', version);
+    formData.append('progress_file', coreProgressFile);
+
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        // Process completed - stop polling
+        clearInterval(coreProgressInterval);
+        
+        // Poll for final status
+        setTimeout(() => {
+            pollCoreProgress();
+        }, 500);
+    })
+    .catch(error => {
+        clearInterval(coreProgressInterval);
+        document.getElementById("core-progress-details").innerHTML = '<div style="color:#dc3545;">Error: ' + error.message + '</div>';
+        document.getElementById("core-status-indicator").textContent = "Error";
+        document.getElementById("core-status-indicator").className = "status-indicator status-completed";
+    });
+}
+
+function pollCoreProgress() {
+    if (!coreProgressFile) return;
+
+    // Progress files are stored in logs directory for web-accessibility
+    fetch('logs/' + coreProgressFile + '?t=' + Date.now())
+        .then(response => {
+            if (response.status === 404) {
+                // Progress file doesn't exist yet - silently continue polling
+                console.log('Waiting for progress file creation...');
+                return null;
+            }
+            if (response.ok) {
+                return response.text();
+            }
+            return null;
+        })
+        .then(text => {
+            if (text) {
+                try {
+                    const data = JSON.parse(text);
+                    updateCoreProgress(data);
+                } catch (e) {
+                    // JSON parsing failed, file might not be complete yet
+                }
+            }
+        })
+        .catch(error => {
+            // Only log real network errors, not expected 404s
+            if (!error.message.includes('404')) {
+                console.error('Progress polling network error:', error);
+            }
+        });
+}
+
+function updateCoreProgress(data) {
+    const statusIndicator = document.getElementById("core-status-indicator");
+    const progressFill = document.getElementById("core-progress-fill");
+    const progressText = document.getElementById("core-progress-text");
+    const progressDetails = document.getElementById("core-progress-details");
+
+    if (data.status) {
+        statusIndicator.textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+    }
+
+    if (data.progress !== undefined) {
+        progressFill.style.width = data.progress + "%";
+    }
+
+    if (data.message) {
+        progressText.textContent = data.message;
+    }
+
+    if (data.details) {
+        progressDetails.innerHTML = data.details;
+    }
+
+    // Update status indicator class
+    if (data.status === 'complete' || data.status === 'error') {
+        statusIndicator.className = "status-indicator status-completed";
+        // Stop polling when complete
+        clearInterval(coreProgressInterval);
+        coreProgressInterval = null;
+    }
+}
+
+// Legacy core reinstallation function (kept for compatibility)
+function reinstallCore() {
+    const version = document.getElementById("wp-version").value;
+    if (confirm("Are you sure you want to re-install WordPress core files? This will replace all core files while preserving wp-config.php and /wp-content. Make sure you have a backup!")) {
+        // Create form and submit
+        const form = document.createElement("form");
+        form.method = "post";
+        form.style.display = "none";
+
+        const actionInput = document.createElement("input");
+        actionInput.type = "hidden";
+        actionInput.name = "action";
+        actionInput.value = "reinstall_core";
+        form.appendChild(actionInput);
+
+        const versionInput = document.createElement("input");
+        versionInput.type = "hidden";
+        versionInput.name = "wp_version";
+        versionInput.value = version;
+        form.appendChild(versionInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+}

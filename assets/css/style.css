@@ -1,0 +1,343 @@
+/* Clean Sweep - Stylesheet
+ * External CSS file for Clean Sweep WordPress toolkit
+ */
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background: #f8f9fa;
+}
+
+.log {
+    color: #666;
+    font-size: 12px;
+}
+
+.error {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.success {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.warning {
+    color: #ffc107;
+    font-weight: bold;
+}
+
+.info {
+    color: #007bff;
+}
+
+pre {
+    background: #f5f5f5;
+    padding: 10px;
+    border: 1px solid #ddd;
+    overflow: auto;
+    max-height: 400px;
+    border-radius: 4px;
+}
+
+.progress-container {
+    margin: 20px 0;
+}
+
+.progress-bar {
+    background: #e9ecef;
+    border-radius: 4px;
+    height: 20px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    background: linear-gradient(90deg, #28a745, #20c997);
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    text-align: center;
+    color: #000;
+    font-size: 12px;
+    line-height: 20px;
+    font-weight: bold;
+}
+
+.status-indicator {
+    display: inline-block;
+    margin-right: 10px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.status-processing {
+    background: #007bff;
+    color: white;
+}
+
+.status-completed {
+    background: #28a745;
+    color: white;
+}
+
+.summary-table {
+    margin: 20px 0;
+    border-collapse: collapse;
+    width: 100%;
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.summary-table th {
+    background: #f8f9fa;
+    padding: 12px;
+    text-align: left;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+}
+
+.summary-table td {
+    padding: 10px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.summary-table tr:hover {
+    background: #f8f9fa;
+}
+
+.plugin-success {
+    background: #d4edda;
+}
+
+.plugin-error {
+    background: #f8d7da;
+}
+
+.plugin-warning {
+    background: #fff3cd;
+}
+
+.stats-box {
+    display: inline-block;
+    margin: 10px;
+    padding: 15px;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    min-width: 120px;
+    text-align: center;
+}
+
+.stats-number {
+    font-size: 24px;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.stats-label {
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tab-container {
+    margin: 20px 0;
+}
+
+.tab-buttons {
+    display: flex;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.tab-button {
+    flex: 1;
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border: none;
+    border-right: 1px solid #dee2e6;
+    text-align: center;
+    cursor: pointer;
+    font-weight: 600;
+    color: #666;
+    transition: background 0.3s;
+}
+
+.tab-button:last-child {
+    border-right: none;
+}
+
+.tab-button.active {
+    background: white;
+    color: #007bff;
+    border-bottom: 3px solid #007bff;
+}
+
+.tab-button:hover {
+    background: #e9ecef;
+}
+
+.tab-content {
+    display: none;
+    padding: 20px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 4px;
+    padding: 40px;
+    text-align: center;
+    margin: 20px 0;
+    background: #f8f9fa;
+    transition: border-color 0.3s;
+}
+
+.upload-area.dragover {
+    border-color: #007bff;
+    background: #e7f3ff;
+}
+
+.upload-input {
+    display: none;
+}
+
+.upload-button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.upload-button:hover {
+    background: #0056b3;
+}
+
+.version-select {
+    margin: 10px 0;
+    padding: 8px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    width: 200px;
+}
+
+.back-to-menu-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.back-to-menu-btn.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.back-to-menu-btn:hover {
+    background: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.back-to-menu-btn:active {
+    transform: translateY(0);
+}
+
+.file-queue {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+}
+
+.file-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin: 10px 0;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    margin: 4px 0;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+}
+
+.file-item:hover {
+    background: #f8f9fa;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.file-icon {
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+.file-details {
+    flex: 1;
+}
+
+.file-name {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 2px;
+}
+
+.file-size {
+    font-size: 12px;
+    color: #666;
+}
+
+.remove-file {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.2s;
+}
+
+.remove-file:hover {
+    background: #c82333;
+}
