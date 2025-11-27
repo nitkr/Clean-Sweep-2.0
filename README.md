@@ -32,7 +32,6 @@ A simple toolkit for basic WordPress cleanup and maintenance tasks. Provides mal
 - **Batch Processing**: Handles large operations in manageable chunks
 - **Backup Creation**: Automatic backups before making changes
 - **Memory Efficient**: Optimized for shared hosting environments
-- **Cross-Platform**: Works in web browsers and command line
 - **PHP 7.0+ Compatible**: Supports modern PHP versions
 
 ## 🚀 Quick Start
@@ -42,15 +41,6 @@ A simple toolkit for basic WordPress cleanup and maintenance tasks. Provides mal
 2. **Access**: Navigate to `http://yoursite.com/clean-sweep/clean-sweep.php`
 3. **Use**: Select the tool you need from the tabbed interface
 4. **Clean Up**: Use the cleanup tool to remove the toolkit when finished
-
-### Command Line
-```bash
-# Navigate to WordPress root
-cd /path/to/wordpress
-
-# Run specific operations
-php clean-sweep/clean-sweep.php
-```
 
 ## 🛠️ Available Tools
 
