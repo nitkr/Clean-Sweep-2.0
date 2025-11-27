@@ -108,7 +108,6 @@ A simple toolkit for basic WordPress cleanup and maintenance tasks. Provides mal
 
 ```
 clean-sweep/
-├── .gitignore               # Git ignore patterns
 ├── clean-sweep.php          # Main entry point
 ├── config.php               # Configuration constants and security checks
 ├── utils.php                # Utility functions and helpers
@@ -152,7 +151,6 @@ clean-sweep/
 │       ├── ui.php            # UI component display
 │       └── utils.php         # Display utility functions
 ├── backups/                 # Auto-generated backup directories
-├── docs/                    # Documentation files (ignored by git)
 └── logs/                    # Log files and progress tracking
 ```
 
