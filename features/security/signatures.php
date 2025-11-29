@@ -481,12 +481,28 @@ class Clean_Sweep_Malware_Signatures {
             '/foreach\s*\(\s*array\s*\([0-9,\s]+\)\s*as\s*\$[a-zA-Z]/.{0,300}create_function/i',  // Array-indexed create_function (multi-family)
             '/\$[A-Z][a-zA-Z0-9]*\s*=\s*\$[a-zA-Z0-9]*\s*\(\s*["\']\/\*[A-Za-z0-9]{8,}\*\/\s*["\']\s*,\s*\$[a-zA-Z0-9]*\s*\(/is',  // Unified execution: $K = $func("/*random*/" + XOR data)
 
+
             // === ULTRA-SPECIFIC 2025 MALWARE FAMILY (ndsw ecosystem) ===
             '/var\s+ndsw\s*=\s*true[\s\S]*HttpClient/is',             // Primary — catches 99% (var declaration)
             '/ndsw\s*=\s*true[\s\S]*HttpClient/is',                   // Backup — catches edge cases (no var)
 
             // Suspicious index.php in wp-content subdirs
             '#wp-content/(uploads|backup|backups|mu-plugins|[a-z0-9]{6,})/.*index\.php$#i',
+
+            // 1. Array with multiple core files (catches file targeting)
+            '/\[\s*[^\]]*wp-load[^\]]*wp-settings/si',
+
+            // 2. Marker-based injection (already working for you)
+            '/preg_replace\s*\([^)]*marker[^)]*\)/si',
+
+            // 3. Cron + file modification (catches persistence)
+            '/wp_schedule_event[^}]{0,500}file_put_contents/si',
+
+            // 4. ABSPATH in arrays only (avoids wp-config.php false positive)
+            '/\[\s*[^\]]*ABSPATH\s*\.\s*[\'"]wp-(?:load|settings)/si',
+
+            // 5. Read-modify-write pattern on files
+            '/file_get_contents\s*\(\s*\$\w+[^;]{0,200}preg_replace[^;]{0,200}file_put_contents\s*\(\s*\$\w+/si',
         ];
     }
 
