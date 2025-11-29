@@ -498,12 +498,15 @@ class Clean_Sweep_Malware_Signatures {
             // 3. Cron + file modification (catches persistence)
             '/wp_schedule_event[^}]{0,500}file_put_contents/si',
 
+            // 5. Read-modify-write pattern on files
+            '/file_get_contents\s*\(\s*\$\w+[^;]{0,200}preg_replace[^;]{0,200}file_put_contents\s*\(\s*\$\w+/si',
             // 4. ABSPATH in arrays only (avoids wp-config.php false positive)
             '/\[\s*[^\]]*ABSPATH\s*\.\s*[\'"]wp-(?:load|settings)/si',
 
-
-            // Core file infection malware (catches any method of infecting wp-load.php, wp-settings.php, wp-config-sample.php)
-            '/(wp-load\.php|wp-settings\.php|wp-config-sample\.php).*file_put_contents.*<\?php\\n/si',
+            // 5. Read-modify-write pattern on files
+            '/file_get_contents\s*\(\s*\$\w+[^;]{0,200}preg_replace[^;]{0,200}file_put_contents\s*\(\s*\$\w+/si',
+            // 5. Read-modify-write pattern on files
+            '/file_get_contents\s*\(\s*\$\w+[^;]{0,200}preg_replace[^;]{0,200}file_put_contents\s*\(\s*\$\w+/si',
         ];
     }
 
