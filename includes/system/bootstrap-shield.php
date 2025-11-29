@@ -429,7 +429,6 @@ function clean_sweep_check_for_reinfection() {
             if ($current_hash !== $baseline_hash) {
                 $violation = [
                     'pattern' => 'INTEGRITY_VIOLATION',
-                    'match' => 'File hash changed from clean baseline',
                     'file' => $file,
                     'severity' => 'critical',
                     'action' => 'investigate_immediately',
@@ -443,7 +442,6 @@ function clean_sweep_check_for_reinfection() {
         } else {
             $violation = [
                 'pattern' => 'INTEGRITY_VIOLATION',
-                'match' => 'Critical core file deleted',
                 'file' => $file,
                 'severity' => 'critical',
                 'action' => 'investigate_immediately',
